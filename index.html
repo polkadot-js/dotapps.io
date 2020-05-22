@@ -4,22 +4,27 @@
     <title>Redirecting to ipns/dotapps.io</title>
     <meta http-equiv="refresh" content="5; url=https://ipfs.io/ipns/dotapps.io" />
     <style>
-      body { background: #fafafa; color: #444; font-family: sans-serif; line-height: 1.5rem; padding: 2rem; text-align: center }
+      body { background: #fafafa; color: #444; font-family: sans-serif; line-height: 1.5rem; padding: 1rem; text-align: center }
       p { margin: 0 }
+      section { margin: 1rem }
     </style>
   </head>
   <body>
-    <p>Redirecting in 5s</p>
-    <p><a href="https://ipfs.io/ipns/dotapps.io">ipfs.io/ipns/dotapps.io</a></p>
-    <p>&nbsp;</p>
-    <p>Alternative ipns-capable gateways</p>
-    <p><a href="https://cloudflare-ipfs.com/ipns/dotapps.io">cloudflare-ipfs.com/ipns/dotapps.io</a></p>
-    <p><a href="https://gateway.ipfs.io/ipns/dotapps.io">gateway.ipfs.io/ipns/dotapps.io</a></p>
-    <p><a href="https://gateway.pinata.cloud/ipns/dotapps.io">gateway.pinata.cloud/ipns/dotapps.io</a></p>
-    <p><a href="https://gateway.temporal.cloud/ipns/dotapps.io">gateway.temporal.cloud/ipns/dotapps.io</a></p>
-    <p>&nbsp;</p>
-    <p>With a local gateway</p>
-    <p><a href="http://localhost:5001/ipns/dotapps.io">localhost:5001/ipns/dotapps.io</a></p>
+    <section>
+      <p>Redirecting in 5s</p>
+      <p><a href="https://ipfs.io/ipns/dotapps.io">ipfs.io/ipns/dotapps.io</a></p>
+    </section>
+    <section>
+      <p>Alternative ipns-capable gateways</p>
+      <p><a href="https://cloudflare-ipfs.com/ipns/dotapps.io">cloudflare-ipfs.com/ipns/dotapps.io</a></p>
+      <p><a href="https://gateway.ipfs.io/ipns/dotapps.io">gateway.ipfs.io/ipns/dotapps.io</a></p>
+      <p><a href="https://gateway.pinata.cloud/ipns/dotapps.io">gateway.pinata.cloud/ipns/dotapps.io</a></p>
+      <p><a href="https://gateway.temporal.cloud/ipns/dotapps.io">gateway.temporal.cloud/ipns/dotapps.io</a></p>
+    </section>
+    <section id='local'>
+      <p>With a local gateway</p>
+      <p><a href="http://localhost:5001/ipns/dotapps.io">localhost:5001/ipns/dotapps.io</a></p>
+    </section>
     <script>
       fetch('https://ipfs.io/api/v0/name/resolve?arg=dotapps.io')
         .then((result) => {
@@ -31,13 +36,14 @@
         })
         .then(({ Path }) => {
           const url = `localhost:5001${Path}`;
+          const s = document.getElementById('local');
           const p = document.createElement('p');
           const a = document.createElement('a');
 
           a.appendChild(document.createTextNode(url));
           a.href = `http://${url}`;
           p.appendChild(a);
-          document.body.appendChild(p);
+          s.appendChild(p);
         })
         .catch((error) => {
           console.error('Unable to make ipns lookup');

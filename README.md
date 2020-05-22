@@ -10,6 +10,5 @@ In addition to the default ipfs.io gateway, alternatives are also provided (thes
 - https://gateway.ipfs.io/ipns/dotapps.io
 - https://gateway.pinata.cloud/ipns/dotapps.io
 - https://gateway.temporal.cloud/ipns/dotapps.io
-- http://localhost:5001/ipns/dotapps.io
 
-The above can be expanded based on user-preferences and feedback. In addition, a reverse lookup on the ipns name is done to retrieve the latest hash. If this is resolved, it is listed as a local link.
+The above can be expanded based on user-preferences and feedback.

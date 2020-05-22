@@ -10,15 +10,39 @@
   </head>
   <body>
     <p>Redirecting in 5s</p>
-    <p><a href="https://ipfs.io/ipns/dotapps.io">https://ipfs.io/ipns/dotapps.io</a></p>
+    <p><a href="https://ipfs.io/ipns/dotapps.io">ipfs.io/ipns/dotapps.io</a></p>
     <p>&nbsp;</p>
     <p>Alternative ipns-capable gateways</p>
-    <p><a href="https://cloudflare-ipfs.com/ipns/dotapps.io">https://cloudflare-ipfs.com/ipns/dotapps.io</a></p>
-    <p><a href="https://gateway.ipfs.io/ipns/dotapps.io">https://gateway.ipfs.io/ipns/dotapps.io</a></p>
-    <p><a href="https://gateway.pinata.cloud/ipns/dotapps.io">https://gateway.pinata.cloud/ipns/dotapps.io</a></p>
-    <p><a href="https://gateway.temporal.cloud/ipns/dotapps.io">https://gateway.temporal.cloud/ipns/dotapps.io</a></p>
+    <p><a href="https://cloudflare-ipfs.com/ipns/dotapps.io">cloudflare-ipfs.com/ipns/dotapps.io</a></p>
+    <p><a href="https://gateway.ipfs.io/ipns/dotapps.io">gateway.ipfs.io/ipns/dotapps.io</a></p>
+    <p><a href="https://gateway.pinata.cloud/ipns/dotapps.io">gateway.pinata.cloud/ipns/dotapps.io</a></p>
+    <p><a href="https://gateway.temporal.cloud/ipns/dotapps.io">gateway.temporal.cloud/ipns/dotapps.io</a></p>
     <p>&nbsp;</p>
     <p>With a local gateway</p>
-    <p><a href="http://localhost:5001/ipns/dotapps.io">http://localhost:5001/ipns/dotapps.io</a></p>
+    <p><a href="http://localhost:5001/ipns/dotapps.io">localhost:5001/ipns/dotapps.io</a></p>
+    <script>
+      fetch('https://ipfs.io/api/v0/name/resolve?arg=dotapps.io')
+        .then((result) => {
+          if (result.status !== 200) {
+            throw new Error(`Received status=${result.status} on lookup`);
+          }
+
+          return result.json();
+        })
+        .then(({ Path }) => {
+          const url = `localhost:5001${Path}`;
+          const p = document.createElement('p');
+          const a = document.createElement('a');
+
+          a.appendChild(document.createTextNode(url));
+          a.href = `http://${url}`;
+          p.appendChild(a);
+          document.body.appendChild(p);
+        })
+        .catch((error) => {
+          console.error('Unable to make ipns lookup');
+          console.error(error);
+        });
+    </script>
   </body>
 </html>

@@ -2,24 +2,55 @@
 <html>
   <head>
     <title>Redirecting to ipns/dotapps.io</title>
-    <meta http-equiv="refresh" content="5; url=https://ipfs.io/ipns/dotapps.io" />
+    <!--meta http-equiv="refresh" content="5; url=https://ipfs.io/ipns/dotapps.io" /-->
     <style>
       a { color: #44f !important; text-decoration: none }
       a+a { margin-left: 0.75rem }
       body { background: #fafafa; color: #444; font-family: sans-serif; line-height: 1.5rem; padding: 1rem; text-align: center }
+      h3 { font-weight: 100; margin: 0.125rem; text-transform: lowercase; }
       p { margin: 0 }
       section { margin: 1.25rem }
-      section#local { display: none }
     </style>
   </head>
   <body>
     <section>
-      <p>Redirecting in 5s</p>
+      <h3>Redirecting in 5s</h3>
       <p><a href="https://ipfs.io/ipns/dotapps.io">ipfs.io/ipns/dotapps.io</a></p>
     </section>
     <section>
-      <p>Alternative ipns-capable gateways</p>
+      <h3>Alternative ipns-capable gateways</h3>
       <p><a href="https://cloudflare-ipfs.com/ipns/dotapps.io">CloudFlare</a><a href="https://gateway.ipfs.io/ipns/dotapps.io">IPFS</a><a href="https://gateway.pinata.cloud/ipns/dotapps.io">Pinata</a><a href="https://gateway.temporal.cloud/ipns/dotapps.io">Temporal</a></p>
     </section>
+    <section id="content"></section>
+    <script>
+      fetch('https://ipfs.io/api/v0/name/resolve?arg=dotapps.io')
+        .then((result) => {
+          if (result.status !== 200) {
+            throw new Error(`Received status=${result.status} on lookup`);
+          }
+
+          return result.json();
+        })
+        .then(({ Path }) => {
+          const hash = Path.replace('/ipfs/', '');
+          const section = document.getElementById('content');
+          const h = document.createElement('h3');
+          const p = document.createElement('p');
+          const a = document.createElement('a');
+
+          h.appendChild(document.createTextNode('Link via content hash'));
+
+          a.appendChild(document.createTextNode(`${hash.substr(0, 8)}…${hash.substr(hash.length - 9)}`));
+          a.href = `https://ipfs.io${Path}`;
+          p.appendChild(a);
+
+          section.appendChild(h);
+          section.appendChild(p);
+        })
+        .catch((error) => {
+          console.error('Unable to make ipns lookup');
+          console.error(error);
+        });
+    </script>
   </body>
 </html>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Redirecting to ipns/dotapps.io</title>
+    <title></title>
     <meta http-equiv="refresh" content="5; url=https://ipfs.io/ipns/dotapps.io" />
     <style>
       a { color: #44f !important; text-decoration: none }
@@ -15,7 +15,7 @@
   <body>
     <section>
       <h3>Redirecting in 5s</h3>
-      <p><a href="https://ipfs.io/ipns/dotapps.io">ipfs.io/ipns/dotapps.io</a></p>
+      <p id="ipns"></p>
     </section>
     <section>
       <h3>Alternative ipns-capable gateways</h3>
@@ -23,34 +23,48 @@
     </section>
     <section id="content"></section>
     <script>
-      fetch('https://ipfs.io/api/v0/name/resolve?arg=dotapps.io')
-        .then((result) => {
-          if (result.status !== 200) {
-            throw new Error(`Received status=${result.status} on lookup`);
-          }
+      (() => {
+        // create redirect & title
+        const query = window.location.search.substring(1).split('&').reduce((query, kv) => {
+          const [key, value] = kv.split('=');
 
-          return result.json();
-        })
-        .then(({ Path }) => {
-          const hash = Path.replace('/ipfs/', '');
-          const section = document.getElementById('content');
-          const h = document.createElement('h3');
-          const p = document.createElement('p');
-          const a = document.createElement('a');
+          query[decodeURIComponent(key)] = decodeURIComponent(value);
 
-          h.appendChild(document.createTextNode('Link via content hash'));
+          return query;
+        }, {});
+        const ipns = query[chain]
+          ? `ipns/${query[chain]}.dotapps.io`
+          : 'ipns/dotapps.io';
+        const aIpns = document.createElement('a');
 
-          a.appendChild(document.createTextNode(`${hash.substr(0, 8)}…${hash.substr(hash.length - 9)}`));
-          a.href = `https://ipfs.io${Path}`;
-          p.appendChild(a);
+        window.document.title = `Redirecting to ${ipns}`;
+        aIpns.href = `https://ipfs.io/${ipns}`;
+        aIpns.appendChild(document.createTextNode(`ipfs.io/${ipns}`));
+        document.getElementById('ipns').appendChild(aIpns);
+      })();
 
-          section.appendChild(h);
-          section.appendChild(p);
-        })
-        .catch((error) => {
-          console.error('Unable to make ipns lookup');
-          console.error(error);
-        });
+      (async () => {
+        // lookup actual content hash
+        const result = await fetch('https://ipfs.io/api/v0/name/resolve?arg=dotapps.io');
+
+        if (result.status !== 200) {
+          throw new Error(`Received status=${result.status} on lookup`);
+        }
+
+        const { Path } = await result.json();
+        const hash = Path.replace('/ipfs/', '');
+        const section = document.getElementById('content');
+        const h = document.createElement('h3');
+        const p = document.createElement('p');
+        const a = document.createElement('a');
+
+        h.appendChild(document.createTextNode('Link via content hash'));
+        a.appendChild(document.createTextNode(`${hash.substr(0, 8)}…${hash.substr(hash.length - 9)}`));
+        a.href = `https://ipfs.io${Path}`;
+        p.appendChild(a);
+        section.appendChild(h);
+        section.appendChild(p);
+      })().catch(console.error);
     </script>
   </body>
 </html>

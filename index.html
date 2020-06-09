@@ -2,7 +2,6 @@
 <html>
   <head>
     <title></title>
-    <meta http-equiv="refresh" content="5; url=https://ipfs.io/ipns/dotapps.io" />
     <style>
       a { color: #44f !important; text-decoration: none }
       a+a { margin-left: 0.75rem }
@@ -32,8 +31,8 @@
 
           return query;
         }, {});
-        const ipns = query[chain]
-          ? `ipns/${query[chain]}.dotapps.io`
+        const ipns = query.chain
+          ? `ipns/${query.chain}.dotapps.io`
           : 'ipns/dotapps.io';
         const aIpns = document.createElement('a');
 
@@ -41,6 +40,10 @@
         aIpns.href = `https://ipfs.io/${ipns}`;
         aIpns.appendChild(document.createTextNode(`ipfs.io/${ipns}`));
         document.getElementById('ipns').appendChild(aIpns);
+
+        setTimeout(() => {
+          window.location.href = `https://ipfs.io/${ipns}`;
+        }, 5000);
       })();
 
       (async () => {

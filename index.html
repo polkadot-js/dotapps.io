@@ -48,7 +48,10 @@
         }
 
         h.appendChild(document.createTextNode(title));
-        hid && h.setAttribute('id', hid);
+
+        if (hid) {
+          h.setAttribute('id', hid);
+        }
 
         section.appendChild(h);
         section.appendChild(p);
@@ -83,14 +86,14 @@
       }
 
       function getRedirect (timeout) {
-        return `Redirecting in ${(timeout / 1000).toFixed(1)}s`
+        return `Redirecting in ${(timeout / 10).toFixed(1)}s`
       }
 
       // main entry point
       async function main () {
         const chain = getChain();
         const ipns = `ipns/${chain ? `${chain}.` : ''}${DOMAIN}`;
-        let timeout = TIMEOUT * 1000;
+        let timeout = TIMEOUT * 10;
 
         window.document.title = `Redirecting to ${ipns}`;
 
@@ -98,12 +101,11 @@
         createSection(null, 'Alternative ipns-capable gateways', GATEWAYS.map(([title, host]) => [title, host, ipns]));
 
         setInterval(() => {
-          timeout = timeout - 100;
-
-          document.getElementById('redirect').textContent = getRedirect(timeout);
-
-          if (timeout === 0) {
+          if (--timeout <= 0) {
+            document.getElementById('redirect').textContent = getRedirect(0);
             window.location.href = `https://ipfs.io/${ipns}`;
+          } else {
+            document.getElementById('redirect').textContent = getRedirect(timeout);
           }
         }, 100);
 

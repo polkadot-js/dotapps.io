@@ -5,13 +5,17 @@
     <style>
       a { color: #44f !important; text-decoration: none }
       a+a { margin-left: 0.75rem }
-      body { background: #fafafa; color: #444; font-family: sans-serif; line-height: 1.5rem; padding: 1rem; text-align: center }
+      body { background: #f5f4f3; color: #444; font-family: sans-serif; line-height: 1.5rem; padding: 1.5rem; text-align: center }
       h3 { font-weight: 100; margin: 0.125rem; text-transform: lowercase; }
       p { margin: 0 }
-      section { margin: 1.25rem }
+      section { margin: 0; max-width: 30rem; padding: 1.5rem; width: 100% }
+      section:nth-child(odd) { background: white }
+      section:nth-child(even) { background: #f9f8f7 }
+      div#container { display: flex; align-items: center; flex-direction: column; justify-content: center; }
     </style>
   </head>
   <body>
+    <div id="container"></div>
     <script>
       // base domain for ipns
       const DOMAIN = 'dotapps.io';
@@ -28,7 +32,7 @@
       const TIMEOUT = 5;
 
       // create a section with a title and links as <section><h3>...</h3><p><a>...</a><a>...</a></p></section>
-      function createSection (title, links) {
+      function createSection (hid, title, links) {
         const section = document.createElement('section');
         const h = document.createElement('h3');
         const p = document.createElement('p');
@@ -39,13 +43,17 @@
 
           a.appendChild(document.createTextNode(text));
           a.href = `${host}/${path}`;
+
           p.appendChild(a);
         }
 
         h.appendChild(document.createTextNode(title));
+        hid && h.setAttribute('id', hid);
+
         section.appendChild(h);
         section.appendChild(p);
-        document.body.appendChild(section);
+
+        document.getElementById('container').appendChild(section);
       }
 
       // parse the query, returning the chain
@@ -74,24 +82,35 @@
         return Path;
       }
 
+      function getRedirect (timeout) {
+        return `Redirecting in ${(timeout / 1000).toFixed(1)}s`
+      }
+
       // main entry point
       async function main () {
         const chain = getChain();
         const ipns = `ipns/${chain ? `${chain}.` : ''}${DOMAIN}`;
+        let timeout = TIMEOUT * 1000;
 
         window.document.title = `Redirecting to ${ipns}`;
 
-        createSection(`Redirecting in ${TIMEOUT}s`, [[`ipfs.io/${ipns}`, 'https://ipfs.io', ipns]]);
-        createSection('Alternative ipns-capable gateways', GATEWAYS.map(([title, host]) => [title, host, ipns]));
+        createSection('redirect', getRedirect(timeout), [[`ipfs.io/${ipns}`, 'https://ipfs.io', ipns]]);
+        createSection(null, 'Alternative ipns-capable gateways', GATEWAYS.map(([title, host]) => [title, host, ipns]));
 
-        setTimeout(() => {
-          window.location.href = `https://ipfs.io/${ipns}`;
-        }, TIMEOUT * 1000);
+        setInterval(() => {
+          timeout = timeout - 100;
+
+          document.getElementById('redirect').textContent = getRedirect(timeout);
+
+          if (timeout === 0) {
+            window.location.href = `https://ipfs.io/${ipns}`;
+          }
+        }, 100);
 
         const path = await lookupHash(DOMAIN);
         const hash = path.replace('/ipfs/', '');
 
-        createSection('Link via content hash', [[`${hash.substr(0, 8)}…${hash.substr(-8)}`, 'https://ipfs.io', path]]);
+        createSection(null, 'Link via content hash', [[`${hash.substr(0, 8)}…${hash.substr(-8)}`, 'https://ipfs.io', path]]);
       }
 
       main().catch(console.error);

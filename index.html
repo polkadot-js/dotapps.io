@@ -12,18 +12,44 @@
     </style>
   </head>
   <body>
-    <section>
-      <h3>Redirecting in 5s</h3>
-      <p id="ipns"></p>
-    </section>
-    <section>
-      <h3>Alternative ipns-capable gateways</h3>
-      <p><a href="https://cloudflare-ipfs.com/ipns/dotapps.io">CloudFlare</a><a href="https://gateway.ipfs.io/ipns/dotapps.io">IPFS</a><a href="https://gateway.pinata.cloud/ipns/dotapps.io">Pinata</a><a href="https://gateway.temporal.cloud/ipns/dotapps.io">Temporal</a></p>
-    </section>
-    <section id="content"></section>
     <script>
-      (() => {
-        // create redirect & title
+      // base domain for ipns
+      const DOMAIN = 'dotapps.io';
+
+      // alternative gateways
+      const GATEWAYS = {
+        CloudFlare: 'https://cloudflare-ipfs.com',
+        IPFS: 'https://gateway.ipfs.io',
+        Pinata: 'https://gateway.pinata.cloud',
+        Temporal: 'https://gateway.temporal.cloud'
+      };
+
+      // timeout in seconds
+      const TIMEOUT = 5;
+
+      // create a section with a title and links as <section><h3>...</h3><p><a>...</a><a>...</a></p></section>
+      function createSection (title, links) {
+        const section = document.createElement('section');
+        const h = document.createElement('h3');
+        const p = document.createElement('p');
+
+        for (let i = 0; i < links.length; i++) {
+          const [text, host, path] = links[i];
+          const a = document.createElement('a');
+
+          a.appendChild(document.createTextNode(text));
+          a.href = `${host}/${path}`;
+          p.appendChild(a);
+        }
+
+        h.appendChild(document.createTextNode(title));
+        section.appendChild(h);
+        section.appendChild(p);
+        document.body.appendChild(section);
+      }
+
+      // parse the query, returning the chain
+      function getChain () {
         const query = window.location.search.substring(1).split('&').reduce((query, kv) => {
           const [key, value] = kv.split('=');
 
@@ -31,43 +57,44 @@
 
           return query;
         }, {});
-        const ipns = query.chain
-          ? `ipns/${query.chain}.dotapps.io`
-          : 'ipns/dotapps.io';
-        const aIpns = document.createElement('a');
 
-        window.document.title = `Redirecting to ${ipns}`;
-        aIpns.href = `https://ipfs.io/${ipns}`;
-        aIpns.appendChild(document.createTextNode(`ipfs.io/${ipns}`));
-        document.getElementById('ipns').appendChild(aIpns);
+        return query.chain;
+      }
 
-        setTimeout(() => {
-          window.location.href = `https://ipfs.io/${ipns}`;
-        }, 5000);
-      })();
-
-      (async () => {
-        // lookup actual content hash
-        const result = await fetch('https://ipfs.io/api/v0/name/resolve?arg=dotapps.io');
+      // lookup an ipfs hash based on the given ipns domain
+      async function lookupHash (domain) {
+        const result = await fetch(`https://ipfs.io/api/v0/name/resolve?arg=${domain}`);
 
         if (result.status !== 200) {
           throw new Error(`Received status=${result.status} on lookup`);
         }
 
         const { Path } = await result.json();
-        const hash = Path.replace('/ipfs/', '');
-        const section = document.getElementById('content');
-        const h = document.createElement('h3');
-        const p = document.createElement('p');
-        const a = document.createElement('a');
 
-        h.appendChild(document.createTextNode('Link via content hash'));
-        a.appendChild(document.createTextNode(`${hash.substr(0, 8)}…${hash.substr(hash.length - 9)}`));
-        a.href = `https://ipfs.io${Path}`;
-        p.appendChild(a);
-        section.appendChild(h);
-        section.appendChild(p);
-      })().catch(console.error);
+        return Path;
+      }
+
+      // main entry point
+      async function main () {
+        const chain = getChain();
+        const ipns = `ipns/${chain ? `${chain}.` : ''}${DOMAIN}`;
+
+        window.document.title = `Redirecting to ${ipns}`;
+
+        createSection(`Redirecting in ${TIMEOUT}s`, [[`ipfs.io/${ipns}`, 'https://ipfs.io', ipns]]);
+        createSection('Alternative ipns-capable gateways', Object.entries(GATEWAYS).map(([title, host]) => [title, host, ipns]));
+
+        setTimeout(() => {
+          window.location.href = `https://ipfs.io/${ipns}`;
+        }, TIMEOUT * 1000);
+
+        const path = await lookupHash(DOMAIN);
+        const hash = path.replace('/ipfs/', '');
+
+        createSection('Link via content hash', [[`${hash.substr(0, 8)}…${hash.substr(-8)}`, 'https://ipfs.io', path]]);
+      }
+
+      main().catch(console.error);
     </script>
   </body>
 </html>

@@ -8,9 +8,11 @@
       body { background: #f5f4f3; color: #444; font-family: sans-serif; line-height: 1.5rem; padding: 1.5rem; text-align: center }
       h3 { font-weight: 100; margin: 0.125rem; text-transform: lowercase; }
       p { margin: 0 }
-      section { margin: 0; max-width: 30rem; padding: 1.5rem; width: 100% }
+      section { border-left: 1px solid #e4e6e8; border-right: 1px solid #e4e6e8; margin: 0; max-width: 30rem; padding: 1.5rem; width: 100% }
       section:nth-child(odd) { background: white }
       section:nth-child(even) { background: #f9f8f7 }
+      section:first-child { border-radius: 0.25rem 0.25rem 0 0; border-top: 1px solid #e4e6e8;  }
+      section:last-child { border-radius: 0 0 0.25rem 0.25rem; border-bottom: 1px solid #e4e6e8;  }
       div#container { display: flex; align-items: center; flex-direction: column; justify-content: center; }
     </style>
   </head>

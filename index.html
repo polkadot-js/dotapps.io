@@ -16,13 +16,13 @@
       // base domain for ipns
       const DOMAIN = 'dotapps.io';
 
-      // alternative gateways
-      const GATEWAYS = {
-        CloudFlare: 'https://cloudflare-ipfs.com',
-        IPFS: 'https://gateway.ipfs.io',
-        Pinata: 'https://gateway.pinata.cloud',
-        Temporal: 'https://gateway.temporal.cloud'
-      };
+      // alternative gateways, [name, host]
+      const GATEWAYS = [
+        ['CloudFlare', 'https://cloudflare-ipfs.com'],
+        ['IPFS', 'https://gateway.ipfs.io'],
+        ['Pinata', 'https://gateway.pinata.cloud'],
+        ['Temporal', 'https://gateway.temporal.cloud']
+      ];
 
       // timeout in seconds
       const TIMEOUT = 5;
@@ -82,7 +82,7 @@
         window.document.title = `Redirecting to ${ipns}`;
 
         createSection(`Redirecting in ${TIMEOUT}s`, [[`ipfs.io/${ipns}`, 'https://ipfs.io', ipns]]);
-        createSection('Alternative ipns-capable gateways', Object.entries(GATEWAYS).map(([title, host]) => [title, host, ipns]));
+        createSection('Alternative ipns-capable gateways', GATEWAYS.map(([title, host]) => [title, host, ipns]));
 
         setTimeout(() => {
           window.location.href = `https://ipfs.io/${ipns}`;

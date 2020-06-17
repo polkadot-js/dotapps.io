@@ -11,13 +11,42 @@
       section:nth-child(odd) { background: white }
       section:nth-child(even) { background: #f9f8f7 }
       #container { display: flex; align-items: center; justify-content: center; height: 100% }
-      #sections { border: 0.125rem solid #e4e6e8; border-radius: 0.25rem; margin-bottom: 15vh; max-width: 40rem; overflow: hidden; width: 100%; z-index: 1 }
-      .dot { position: absolute; border-radius: 50% }
+      #sections { border: 0.125rem solid #e4e6e8; border-radius: 0.25rem; margin-bottom: 15vh; max-width: 40rem; overflow: hidden; width: 100%; z-index: 2 }
+      .dot { border-radius: 50%; position: absolute; z-index: 0; }
+      /* https://gist.github.com/AnitaOlsen/c03d46d2c4f304259c1ce3520a4678f6 */
+      #bunny { opacity: 0.75; position: absolute; margin: auto; display: block; margin-top: 8%; width: 16rem; height: 11.2rem; background: none; z-index: 1 }
+      #bunny .head { position: absolute; top:16.5%; left: 25%; width: 48%; height: 70%; background: #FFFFFF; border-radius: 50% }
+      #bunny .head-copy { width: 100%; height: 100%; position: absolute; background: #FFFFFF; border-radius: 50%; z-index: 2 }
+      #bunny .ear-left { position: absolute; width: 20%; height: 50%; left: 6%; top: -30%; background: #FFFFFF; border-radius: 50%; transform: rotate(160deg); z-index: 1 }
+      #bunny .ear-right { position: absolute; width: 20%; height: 50%; right: 6%; top: -30%; background: #FFFF; border-radius: 50%; transform: rotate(200deg); z-index: 1 }
+      #bunny .inner-ear { position: absolute; border-radius: 50%; width: 73%; height: 80%; top: 10%; left: 14%; background: #F9BBC9 }
+      #bunny .eye-left { position: absolute; background: pink; width: 13%; height: 20%; top: 37%; left: 27%; border-radius: 50%; transform: rotate(-20deg); z-index: 3 }
+      #bunny .eye-right { position: absolute; background: pink; width: 13%; height: 20%; top: 37%; right: 25%; border-radius: 50%; transform: rotate(20deg); z-index: 3 }
+      #bunny .pupil { position: absolute; width: 73%; height: 70%; top: 15%; left: 15%; border-radius: 50%; background: #CC7080 }
+      #bunny .nose { position: absolute; background: #F9BBC9; width: 13%; height: 10%; left: 45%; top: 70%; border-radius: 50px; z-index: 4 }
     </style>
   </head>
   <body>
     <div id="container">
       <div id="sections"></div>
+    </div>
+    <div id="bunny">
+      <div class="head">
+        <div class="head-copy"></div>
+        <div class="ear-left">
+          <div class="inner-ear"></div>
+        </div>
+        <div class="ear-right">
+          <div class="inner-ear"></div>
+        </div>
+        <div class="eye-left">
+          <div class="pupil"></div>
+        </div>
+        <div class="eye-right">
+          <div class="pupil"></div>
+        </div>
+        <div class="nose"></div>
+      </div>
     </div>
     <script>
       // gateway check hash & test
@@ -164,6 +193,7 @@
       function createRedirect (url) {
         const h3 = document.getElementById('redirect').querySelector('h3');
         let timeout = TIMEOUT * 10;
+        const halfway = timeout - 15;
 
         setInterval(() => {
           if (--timeout >= 0) {
@@ -171,6 +201,11 @@
 
             if (timeout === 0) {
               window.location.href = url;
+            } else if (timeout === halfway) {
+              const bunny = document.getElementById('bunny');
+
+              bunny.style.top = `${(window.innerHeight * Math.random())}px`;
+              bunny.style.left = `${(window.innerWidth * Math.random())}px`;
             }
 
             for (let i = 0; i < 7; i++) {

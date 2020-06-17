@@ -3,8 +3,7 @@
   <head>
     <title></title>
     <style>
-      a { color: #44f !important; text-decoration: none }
-      a+a { margin-left: 0.75rem }
+      a { color: #44f !important; margin: 0 0.375rem; text-decoration: none }
       body { background: #f5f4f3; color: #444; font-family: sans-serif; line-height: 1.5rem; padding: 1.5rem; text-align: center }
       h3 { font-weight: 100; margin: 0.125rem; text-transform: lowercase; }
       p { margin: 0 }
@@ -23,42 +22,49 @@
       const CHECK_HASH = 'bafybeifx7yeb55armcsxwwitkymga5xf53dxiarykms3ygqic223w5sk3m';
       const CHECK_STRING = 'Hello from IPFS Gateway Checker';
 
-      // base domain for ipns
+      // base domain for IPNS
       const DOMAIN = 'dotapps.io';
 
-      // alternative gateways, [name, host]
+      // alternative IPNS-capable gateways, [name, host]
       const GATEWAYS = [
         ['CloudFlare', 'https://cloudflare-ipfs.com'],
-        ['IPFS', 'https://gateway.ipfs.io'],
+        ['Eternum', 'https://ipfs.eternum.io'],
         ['Pinata', 'https://gateway.pinata.cloud'],
+        ['PrivacyTools', 'https://ipfs.privacytools.io'],
         ['Temporal', 'https://gateway.temporal.cloud']
       ];
 
       // timeout in seconds
       const TIMEOUT = 5;
 
+      // create a link tag
+      function createLink (text, host, path, linkId) {
+        const a = document.createElement('a');
+
+        a.appendChild(document.createTextNode(text));
+        a.href = `${host}/${path}`;
+
+        if (linkId) {
+          a.setAttribute('id', linkId);
+          a.style.display = 'none';
+        }
+
+        return a;
+      }
+
       // create a section with a title and links as <section><h3>...</h3><p><a>...</a><a>...</a></p></section>
-      function createSection (hid, title, links) {
+      function createSection (sectionId, title, links) {
         const section = document.createElement('section');
         const h = document.createElement('h3');
         const p = document.createElement('p');
 
         for (let i = 0; i < links.length; i++) {
-          const [text, host, path] = links[i];
-          const a = document.createElement('a');
-
-          a.appendChild(document.createTextNode(text));
-          a.href = `${host}/${path}`;
-
-          p.appendChild(a);
+          p.appendChild(links[i]);
         }
 
         h.appendChild(document.createTextNode(title));
 
-        if (hid) {
-          h.setAttribute('id', hid);
-        }
-
+        section.setAttribute('id', sectionId);
         section.appendChild(h);
         section.appendChild(p);
 
@@ -86,25 +92,21 @@
         return null;
       }
 
-      // filter gateways, returning those that are available
-      async function filterGateways () {
-        const gateways = await Promise.all(GATEWAYS.map(async (gateway) => {
-          try {
-            // check the content of the hash on the supplied host
-            const result = await fetch(`${gateway[1]}/ipfs/${CHECK_HASH}`);
-            const text = await result.text();
+      // check a specific gateway for uptime
+      async function checkGateway (host) {
+        try {
+          // check the content of the hash on the supplied host
+          const result = await fetch(`${host}/ipfs/${CHECK_HASH}`);
+          const text = await result.text();
 
-            if (CHECK_STRING === text.trim()) {
-              return gateway;
-            }
-          } catch (error) {
-            console.error(error);
+          if (CHECK_STRING === text.trim()) {
+            return true;
           }
+        } catch (error) {
+          console.error(error);
+        }
 
-          return null;
-        }));
-
-        return gateways.filter((gw) => gw);
+        return false;
       }
 
       // lookup an ipfs hash based on the given ipns domain
@@ -138,31 +140,40 @@
 
         window.document.title = `Redirecting to ${ipns}`;
 
-        createSection('redirect', getRedirect(timeout), [[`ipfs.io/${ipns}`, 'https://ipfs.io', ipns]]);
+        createSection('redirect', getRedirect(timeout), [createLink(ipns, 'https://ipfs.io', ipns)]);
 
         setInterval(() => {
+          const h3 = document.getElementById('redirect').querySelector('h3');
+
           if (--timeout <= 0) {
-            document.getElementById('redirect').textContent = getRedirect(0);
+            h3.textContent = getRedirect(0);
             window.location.href = `https://ipfs.io/${ipns}`;
           } else {
-            document.getElementById('redirect').textContent = getRedirect(timeout);
+            h3.textContent = getRedirect(timeout);
           }
         }, 100);
 
-        const [path, gateways] = await Promise.all([
-          lookupHash(DOMAIN),
-          filterGateways()
-        ]);
+        // lookup the hash and add a section for it
+        lookupHash(DOMAIN).then((path) => {
+          if (path) {
+            const hash = path.replace('/ipfs/', '');
 
-        if (gateways.length) {
-          createSection(null, 'Alternative ipns-capable gateways', gateways.map(([title, host]) => [title, host, ipns]));
-        }
+            createSection('content', 'Link via content hash', [createLink(`${hash.substr(0, 8)}…${hash.substr(-8)}`, 'https://ipfs.io', path)]);
+          }
+        });
 
-        if (path) {
-          const hash = path.replace('/ipfs/', '');
+        createSection('gateways', 'Alternative gateways', GATEWAYS.map(([title, host]) => createLink(title, host, ipns, title)));
 
-          createSection(null, 'Link via content hash', [[`${hash.substr(0, 8)}…${hash.substr(-8)}`, 'https://ipfs.io', path]]);
-        }
+        // loop through the gateways, adding them as they appear
+        GATEWAYS.forEach(([title, host]) => {
+          checkGateway(host).then((isUp) => {
+            if (isUp) {
+              const a = document.getElementById(title);
+
+              a.style.display = 'inline';
+            }
+          })
+        });
       }
 
       main().catch(console.error);

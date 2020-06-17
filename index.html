@@ -19,6 +19,10 @@
   <body>
     <div id="container"></div>
     <script>
+      // gateway check hash & test
+      const CHECK_HASH = 'bafybeifx7yeb55armcsxwwitkymga5xf53dxiarykms3ygqic223w5sk3m';
+      const CHECK_STRING = 'Hello from IPFS Gateway Checker';
+
       // base domain for ipns
       const DOMAIN = 'dotapps.io';
 
@@ -82,17 +86,44 @@
         return null;
       }
 
+      // filter gateways, returning those that are available
+      async function filterGateways () {
+        const gateways = await Promise.all(GATEWAYS.map(async (gateway) => {
+          try {
+            // check the content of the hash on the supplied host
+            const result = await fetch(`${gateway[1]}/ipfs/${CHECK_HASH}`);
+            const text = await result.text();
+
+            if (CHECK_STRING === text.trim()) {
+              return gateway;
+            }
+          } catch (error) {
+            console.error(error);
+          }
+
+          return null;
+        }));
+
+        return gateways.filter((gw) => gw);
+      }
+
       // lookup an ipfs hash based on the given ipns domain
       async function lookupHash (domain) {
-        const result = await fetch(`https://ipfs.io/api/v0/name/resolve?arg=${domain}`);
+        try {
+          const result = await fetch(`https://ipfs.io/api/v0/name/resolve?arg=${domain}`);
 
-        if (result.status !== 200) {
-          throw new Error(`Received status=${result.status} on lookup`);
+          if (result.status !== 200) {
+            throw new Error(`Received status=${result.status} on lookup`);
+          }
+
+          const { Path } = await result.json();
+
+          return Path;
+        } catch (error) {
+          console.error(error);
         }
 
-        const { Path } = await result.json();
-
-        return Path;
+        return null;
       }
 
       function getRedirect (timeout) {
@@ -108,7 +139,6 @@
         window.document.title = `Redirecting to ${ipns}`;
 
         createSection('redirect', getRedirect(timeout), [[`ipfs.io/${ipns}`, 'https://ipfs.io', ipns]]);
-        createSection(null, 'Alternative ipns-capable gateways', GATEWAYS.map(([title, host]) => [title, host, ipns]));
 
         setInterval(() => {
           if (--timeout <= 0) {
@@ -119,10 +149,20 @@
           }
         }, 100);
 
-        const path = await lookupHash(DOMAIN);
-        const hash = path.replace('/ipfs/', '');
+        const [path, gateways] = await Promise.all([
+          lookupHash(DOMAIN),
+          filterGateways()
+        ]);
 
-        createSection(null, 'Link via content hash', [[`${hash.substr(0, 8)}…${hash.substr(-8)}`, 'https://ipfs.io', path]]);
+        if (gateways.length) {
+          createSection(null, 'Alternative ipns-capable gateways', gateways.map(([title, host]) => [title, host, ipns]));
+        }
+
+        if (path) {
+          const hash = path.replace('/ipfs/', '');
+
+          createSection(null, 'Link via content hash', [[`${hash.substr(0, 8)}…${hash.substr(-8)}`, 'https://ipfs.io', path]]);
+        }
       }
 
       main().catch(console.error);

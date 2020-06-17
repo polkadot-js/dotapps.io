@@ -63,15 +63,23 @@
 
       // parse the query, returning the chain
       function getChain () {
-        const query = window.location.search.substring(1).split('&').reduce((query, kv) => {
-          const [key, value] = kv.split('=');
+        const parts = window.location.search.substring(1).split('&').filter((p) => p);
 
-          query[decodeURIComponent(key)] = decodeURIComponent(value);
+        if (parts.length) {
+          for (let i = 0; i < parts.length; i++) {
+            if (parts[i].includes('=')) {
+              const [key, value] = parts[i].split('=');
 
-          return query;
-        }, {});
+              if (key === 'chain') {
+                return value;
+              }
+            } else {
+              return parts[i];
+            }
+          }
+        }
 
-        return query.chain;
+        return null;
       }
 
       // lookup an ipfs hash based on the given ipns domain

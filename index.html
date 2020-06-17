@@ -57,10 +57,7 @@
         const h = document.createElement('h3');
         const p = document.createElement('p');
 
-        for (let i = 0; i < links.length; i++) {
-          p.appendChild(links[i]);
-        }
-
+        links.forEach((link) => p.appendChild(link));
         h.appendChild(document.createTextNode(title));
 
         section.setAttribute('id', sectionId);
@@ -119,18 +116,20 @@
 
           const { Path } = await result.json();
 
-          return Path;
+          return [Path, Path.replace('/ipfs/', '')];
         } catch (error) {
           console.error(error);
         }
 
-        return null;
+        return [null, null];
       }
 
+      // Redirect text display (single multiple places, extracted)
       function getRedirect (timeout) {
-        return `Redirecting in ${(timeout / 10).toFixed(1)}s`
+        return `Redirecting in ${timeout.toFixed(1)}s`
       }
 
+      // Random background by tweaking the hue. Additionally it adjusts the link & border colors
       function changeBackground () {
         const style = document.createElement('style');
         let hue = Math.floor(Math.random() * 359);
@@ -139,59 +138,58 @@
 
         setInterval(() => {
           hue = (hue + 1) % 360;
-
           document.body.style.background = `hsl(${hue}, 45%, 85%)`;
           style.innerHTML = `a { color: hsl(${hue}, 45%, 45%) !important } div#sections { border-color: hsl(${hue}, 45%, 75%) } section:nth-child(even) { background: hsl(${hue}, 45%, 95%) }`;
-        }, 20);
+        }, 25);
       }
 
-      // main entry point
-      async function main () {
+      // Sets up the redirect countdown timer
+      function createRedirect (url) {
+        const h3 = document.getElementById('redirect').querySelector('h3');
+        let timeout = TIMEOUT * 10;
+
+        setInterval(() => {
+          if (--timeout >= 0) {
+            h3.textContent = getRedirect(timeout / 10);
+
+            if (timeout === 0) {
+              window.location.href = url;
+            }
+          }
+        }, 100);
+      }
+
+      // Creates the content
+      function main () {
         const chain = getChain();
         const ipns = `ipns/${chain ? `${chain}.` : ''}${DOMAIN}`;
-        let timeout = TIMEOUT * 10;
 
         window.document.title = `Redirecting to ${ipns}`;
 
-        createSection('redirect', getRedirect(timeout), [createLink(ipns, 'https://ipfs.io', ipns)]);
-
-        setInterval(() => {
-          const h3 = document.getElementById('redirect').querySelector('h3');
-
-          if (--timeout <= 0) {
-            h3.textContent = getRedirect(0);
-            window.location.href = `https://ipfs.io/${ipns}`;
-          } else {
-            h3.textContent = getRedirect(timeout);
-          }
-        }, 100);
-
-        // lookup the hash and add a section for it
-        lookupHash(DOMAIN).then((path) => {
-          if (path) {
-            const hash = path.replace('/ipfs/', '');
-
-            createSection('content', 'Link via content hash', [createLink(`${hash.substr(0, 8)}…${hash.substr(-8)}`, 'https://ipfs.io', path)]);
-          }
-        });
-
+        createSection('redirect', getRedirect(TIMEOUT), [createLink(ipns, 'https://ipfs.io', ipns)]);
         createSection('gateways', 'Alternative gateways', GATEWAYS.map(([title, host]) => createLink(title, host, ipns, title)));
 
         // loop through the gateways, adding them as they appear
         GATEWAYS.forEach(([title, host]) => {
           checkGateway(host).then((isUp) => {
             if (isUp) {
-              const a = document.getElementById(title);
-
-              a.style.display = 'inline';
+              document.getElementById(title).style.display = 'inline';
             }
           })
         });
 
+        // lookup the hash and add a section for it
+        lookupHash(DOMAIN).then(([path, hash]) => {
+          if (path) {
+            createSection('content', 'Link via content hash', [createLink(`${hash.substr(0, 8)}…${hash.substr(-8)}`, 'https://ipfs.io', path)]);
+          }
+        });
+
+        createRedirect(`https://ipfs.io/${ipns}`);
         changeBackground();
       }
 
-      main().catch(console.error);
+      main();
     </script>
   </body>
 </html>

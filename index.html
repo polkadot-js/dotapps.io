@@ -11,7 +11,8 @@
       section:nth-child(odd) { background: white }
       section:nth-child(even) { background: #f9f8f7 }
       #container { display: flex; align-items: center; justify-content: center; height: 100% }
-      #sections { border: 0.125rem solid #e4e6e8; border-radius: 0.25rem; margin-bottom: 15vh; max-width: 40rem; overflow: hidden; width: 100% }
+      #sections { border: 0.125rem solid #e4e6e8; border-radius: 0.25rem; margin-bottom: 15vh; max-width: 40rem; overflow: hidden; width: 100%; z-index: 1 }
+      .dot { position: absolute; border-radius: 50% }
     </style>
   </head>
   <body>
@@ -36,6 +37,21 @@
 
       // timeout in seconds
       const TIMEOUT = 5;
+
+      // creates a random dot for the background
+      function createDot () {
+        const dot = document.createElement('div');
+        const size = (Math.floor(4000 * Math.random()) / 1000) + 0.5;
+
+        dot.classList.add('dot');
+        dot.style.top = `${(window.innerHeight * Math.random())}px`;
+        dot.style.left = `${(window.innerWidth * Math.random())}px`;
+        dot.style.height = `${size}em`;
+        dot.style.width = `${size}em`;
+        dot.style.backgroundColor = `rgba(255, 255, 255, ${Math.random() * 0.66})`;
+
+        document.body.appendChild(dot);
+      }
 
       // create a link tag
       function createLink (text, host, path, linkId) {
@@ -155,6 +171,10 @@
 
             if (timeout === 0) {
               window.location.href = url;
+            }
+
+            for (let i = 0; i < 7; i++) {
+              createDot();
             }
           }
         }, 100);

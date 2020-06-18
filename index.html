@@ -113,22 +113,16 @@
         document.getElementById('sections').appendChild(section);
       }
 
-      // parse the query, returning the chain
+      // parse the ?<chain> param, returning valid
       function getChain () {
-        const parts = window.location.search.substring(1).split('&').filter((p) => p);
+        try {
+          const query = decodeURI(window.location.search.substring(1)).trim();
 
-        if (parts.length) {
-          for (let i = 0; i < parts.length; i++) {
-            if (parts[i].includes('=')) {
-              const [key, value] = parts[i].split('=');
-
-              if (key === 'chain') {
-                return value;
-              }
-            } else {
-              return parts[i];
-            }
+          if (query.length && query !== 'www') {
+            return query;
           }
+        } catch (error) {
+          console.error(error);
         }
 
         return null;

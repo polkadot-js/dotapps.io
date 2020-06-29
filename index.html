@@ -81,7 +81,7 @@
         dot.style.left = `${(window.innerWidth * Math.random())}px`;
         dot.style.height = `${size}em`;
         dot.style.width = `${size}em`;
-        dot.style.backgroundColor = `rgba(255, 255, 255, ${Math.random() * 0.66})`;
+        dot.style.backgroundColor = `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.random() * 0.66})`;
 
         document.body.appendChild(dot);
       }

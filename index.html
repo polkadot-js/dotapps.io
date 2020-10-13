@@ -72,7 +72,7 @@
       const TIMEOUT = 5;
 
       // creates a random dot for the background
-      function createDot () {
+      function createDot (color) {
         const dot = document.createElement('div');
         const size = (Math.floor(4000 * Math.random()) / 1000) + 0.5;
 
@@ -81,7 +81,7 @@
         dot.style.left = `${(window.innerWidth * Math.random())}px`;
         dot.style.height = `${size}em`;
         dot.style.width = `${size}em`;
-        dot.style.backgroundColor = `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.random() * 0.66})`;
+        dot.style.backgroundColor = color;
 
         document.body.appendChild(dot);
       }
@@ -184,6 +184,8 @@
           hue = (hue + 1) % 360;
           document.body.style.background = `hsl(${hue}, 45%, 85%)`;
           style.innerHTML = `a { color: hsl(${hue}, 45%, 45%) !important } #sections { border-color: hsl(${hue}, 45%, 75%) } section:nth-child(even) { background: hsl(${hue}, 45%, 95%) }`;
+
+          createDot(`hsl(${hue}, 45%, 75%)`);
         }, 25);
       }
 
@@ -207,10 +209,6 @@
 
             if (timeout === 0) {
               window.location.href = url;
-            }
-
-            for (let i = 0; i < 7; i++) {
-              createDot();
             }
           }
         }, 100);

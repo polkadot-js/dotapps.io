@@ -54,6 +54,10 @@
       </div>
     </div>
     <script>
+      if (window.self !== window.top) {
+        window.top.location.href = window.location.href;
+      }
+
       // gateway check hash & test
       const CHECK_HASH = 'bafybeifx7yeb55armcsxwwitkymga5xf53dxiarykms3ygqic223w5sk3m';
       const CHECK_STRING = 'Hello from IPFS Gateway Checker';

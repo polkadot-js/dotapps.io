@@ -65,10 +65,14 @@
       // base domain for IPNS
       const DOMAIN = 'dotapps.io';
 
+      // default gateway
+      const GATEWAY = 'https://cloudflare-ipfs.com';
+
       // alternative IPNS-capable gateways, [name, host]
       const GATEWAYS = [
         ['CloudFlare', 'https://cloudflare-ipfs.com'],
         ['Eternum', 'https://ipfs.eternum.io'],
+        ['IPFS.io', 'https://ipfs.io'],
         ['Pinata', 'https://gateway.pinata.cloud'],
         ['Temporal', 'https://gateway.temporal.cloud']
       ];
@@ -226,7 +230,7 @@
 
         window.document.title = `Redirecting to ${ipns}`;
 
-        createSection('redirect', getRedirect(TIMEOUT), [createLink(ipns, 'https://ipfs.io', ipns)]);
+        createSection('redirect', getRedirect(TIMEOUT), [createLink(ipns, GATEWAY, ipns)]);
         createSection('gateways', 'Alternative gateways', GATEWAYS.map(([title, host]) => createLink(title, host, ipns, title)));
 
         // loop through the gateways, adding them as they appear
@@ -241,11 +245,11 @@
         // lookup the hash and add a section for it
         lookupHash(DOMAIN).then(([path, hash]) => {
           if (path) {
-            createSection('content', 'Link via content hash', [createLink(hash, 'https://ipfs.io', path)]);
+            createSection('content', 'Link via content hash', [createLink(hash, GATEWAY, path)]);
           }
         });
 
-        createRedirect(`https://ipfs.io/${ipns}`);
+        createRedirect(`${GATEWAY}${ipns}`);
         changeBackground();
       }
 

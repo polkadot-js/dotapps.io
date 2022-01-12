@@ -73,7 +73,6 @@
       const GATEWAYS = [
         ['Cloudflare', 'https://cloudflare-ipfs.com'],
         ['Crust', 'https://crustipfs.xyz'],
-        ['Eternum', 'https://ipfs.eternum.io'],
         ['Fleek', 'https://ipfs.fleek.co'],
         ['IPFS.io', 'https://ipfs.io'],
         ['Pinata', 'https://gateway.pinata.cloud']
@@ -150,18 +149,21 @@
 
         try {
           // check the content of the hash on the supplied host
-          const text = await fetch(`${host}/ipfs/${CHECK_HASH}`)
-            .then((result) => result.text())
-            .then((text) => text.trim());
+          const [isUp, hash] = await Promise.all([
+            fetch(`${host}/ipfs/${CHECK_HASH}`)
+              .then((result) => result.text())
+              .then((text) => text.trim() === CHECK_STRING),
+            fetch(`${host}/ipns/dotapps.io/ipfs/pin.json`)
+              .then((result) => result.json())
+              .then((json) => json.IpfsHash)
+          ]);
 
-          if (CHECK_STRING === text) {
-            return [true, Date.now() - start];
-          }
+          return [isUp, Date.now() - start, hash];
         } catch (error) {
           console.error(error);
         }
 
-        return [false, 0];
+        return [false, 0, null];
       }
 
       // lookup an ipfs hash based on the given ipns domain
@@ -244,15 +246,15 @@
         Promise
           .all(
             GATEWAYS.map(([title, host]) =>
-              checkGateway(host).then(([isUp, time]) => [time, isUp, title, host])
+              checkGateway(host).then(([isUp, time, hash]) => [time, isUp, title, host, hash])
             )
           )
           .then((all) =>
             all
               .sort((a, b) => a[0] - b[0])
-              .forEach(([time, isUp, title, host]) => {
+              .forEach(([time, isUp, title, host, hash]) => {
                 if (isUp) {
-                  console.log(`Response from ${host} in ${time}ms`);
+                  console.log(`Response from ${host} in ${time}ms with ${hash}`);
 
                   createSectionChildren(gateways, [createLink(title, host, ipns)]);
                 } else {

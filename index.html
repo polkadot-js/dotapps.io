@@ -97,16 +97,11 @@
       }
 
       // create a link tag
-      function createLink (text, host, path, linkId) {
+      function createLink (text, host, path) {
         const a = document.createElement('a');
 
         a.appendChild(document.createTextNode(text));
         a.href = `${host}/${path}`;
-
-        if (linkId) {
-          a.setAttribute('id', linkId);
-          a.style.display = 'none';
-        }
 
         return a;
       }
@@ -244,18 +239,26 @@
 
         const gateways = createSection('gateways', 'Available gateways', []);
 
-        // loop through the gateways, adding them as they appear
-        GATEWAYS.forEach(([title, host]) => {
-          checkGateway(host).then(([isUp, time]) => {
-            if (isUp) {
-              console.log(`Response from ${host} in ${time}ms`);
+        // loop through the gateways, adding them in order of appearance
+        Promise
+          .all(
+            GATEWAYS.map(([title, host]) =>
+              checkGateway(host).then(([isUp, time]) => [time, isUp, title, host])
+            )
+          )
+          .then((all) =>
+            all
+              .sort((a, b) => a[0] - b[0])
+              .forEach(([time, isUp, title, host]) => {
+                if (isUp) {
+                  console.log(`Response from ${host} in ${time}ms`);
 
-              createSectionChildren(gateways, [createLink(title, host, ipns, title)]);
-
-              document.getElementById(title).style.display = 'inline';
-            }
-          })
-        });
+                  createSectionChildren(gateways, [createLink(title, host, ipns)]);
+                } else {
+                  console.log(`No response from ${host}`);
+                }
+              })
+          );
 
         // lookup the hash and add a section for it
         lookupHash(DOMAIN).then(([path, hash]) => {

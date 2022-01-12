@@ -75,12 +75,11 @@
         ['Crust', 'https://crustipfs.xyz'],
         ['Eternum', 'https://ipfs.eternum.io'],
         ['IPFS.io', 'https://ipfs.io'],
-        ['Pinata', 'https://gateway.pinata.cloud'],
-        ['Temporal', 'https://gateway.temporal.cloud']
+        ['Pinata', 'https://gateway.pinata.cloud']
       ];
 
       // timeout in seconds
-      const TIMEOUT = 5;
+      const TIMEOUT = 500;
 
       // creates a random dot for the background
       function createDot (color) {
@@ -112,20 +111,26 @@
         return a;
       }
 
+      function createSectionChildren (inner, children) {
+        children.forEach((c) => inner.appendChild(c));
+      }
+
       // create a section with a title and links as <section><h3>...</h3><p>{children}</p></section>
       function createSection (sectionId, title, children) {
         const section = document.createElement('section');
         const h = document.createElement('h3');
-        const p = document.createElement('p');
+        const inner = document.createElement('p');
 
-        children.forEach((c) => p.appendChild(c));
+        createSectionChildren(inner, children);
         h.appendChild(document.createTextNode(title));
 
         section.setAttribute('id', sectionId);
         section.appendChild(h);
-        section.appendChild(p);
+        section.appendChild(inner);
 
         document.getElementById('sections').appendChild(section);
+
+        return inner;
       }
 
       // parse the ?<chain> param, returning valid
@@ -145,31 +150,34 @@
 
       // check a specific gateway for uptime
       async function checkGateway (host) {
+        const start = Date.now();
+
         try {
           // check the content of the hash on the supplied host
-          const result = await fetch(`${host}/ipfs/${CHECK_HASH}`);
-          const text = await result.text();
+          const text = await fetch(`${host}/ipfs/${CHECK_HASH}`)
+            .then((result) => result.text())
+            .then((text) => text.trim());
 
-          if (CHECK_STRING === text.trim()) {
-            return true;
+          if (CHECK_STRING === text) {
+            return [true, Date.now() - start];
           }
         } catch (error) {
           console.error(error);
         }
 
-        return false;
+        return [false, 0];
       }
 
       // lookup an ipfs hash based on the given ipns domain
       async function lookupHash (domain) {
         try {
-          const result = await fetch(`https://ipfs.io/api/v0/name/resolve?arg=${domain}`);
+          const { Path } = await fetch(`https://ipfs.io/api/v0/name/resolve?arg=${domain}`).then((result) => {
+            if (result.status !== 200) {
+              throw new Error(`Received status=${result.status} on lookup`);
+            }
 
-          if (result.status !== 200) {
-            throw new Error(`Received status=${result.status} on lookup`);
-          }
-
-          const { Path } = await result.json();
+            return result.json();
+          });
 
           return [Path, Path.replace('/ipfs/', '')];
         } catch (error) {
@@ -233,12 +241,17 @@
         window.document.title = `Redirecting to ${ipns}`;
 
         createSection('redirect', getRedirect(TIMEOUT), [createLink(ipns, GATEWAY, ipns)]);
-        createSection('gateways', 'Alternative gateways', GATEWAYS.map(([title, host]) => createLink(title, host, ipns, title)));
+
+        const gateways = createSection('gateways', 'Available gateways', []);
 
         // loop through the gateways, adding them as they appear
         GATEWAYS.forEach(([title, host]) => {
-          checkGateway(host).then((isUp) => {
+          checkGateway(host).then(([isUp, time]) => {
             if (isUp) {
+              console.log(`Response from ${host} in ${time}ms`);
+
+              createSectionChildren(gateways, [createLink(title, host, ipns, title)]);
+
               document.getElementById(title).style.display = 'inline';
             }
           })

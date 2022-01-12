@@ -253,7 +253,7 @@
             all
               .sort((a, b) => a[0] - b[0])
               .forEach(([time, isUp, title, host, hash]) => {
-                if (isUp) {
+                if (isUp && hash) {
                   console.log(`Response from ${host} in ${time}ms with ${hash}`);
 
                   createSectionChildren(gateways, [createLink(title, host, ipns)]);
